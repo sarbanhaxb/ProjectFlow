@@ -1,6 +1,8 @@
 ﻿<Window x:Class="ProjectFlow.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:ProjectFlow.ViewModels"
+        xmlns:views="clr-namespace:ProjectFlow.Views"
         Title="ProjectFlow — Управление проектами"
         Height="700"
         Width="1100"
@@ -9,6 +11,22 @@
         WindowStartupLocation="CenterScreen"
         Background="#F5F7FB">
 
+    <Window.Resources>
+
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:ProjectsViewModel}">
+            <views:ProjectsView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
+            <views:PlaceholderView/>
+        </DataTemplate>
+
+    </Window.Resources>
+    
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="230"/>
@@ -41,7 +59,7 @@
 
                 <Button Content="Задачи"
                         Command="{Binding NavigateCommand}"
-                        CommandParameter="Задачи"
+                        CommandParameter="Задачи"                       
                         Height="45"
                         Margin="0,0,0,10"/>
 
@@ -67,30 +85,34 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="{Binding PageTitle}"
-                       FontSize="30"
-                       FontWeight="Bold"
-                       Foreground="#1E293B"
-                       Margin="0,0,0,25"/>
 
-            <Border Grid.Row="1"
-                    Background="White"
-                    CornerRadius="12"
-                    Padding="25">
+            <StackPanel Grid.Row="0" Margin="0,0,0,25">
 
-                <StackPanel>
-                    <TextBlock Text="Добро пожаловать в ProjectFlow!"
-                               FontSize="22"
-                               FontWeight="SemiBold"
-                               Foreground="#1E293B"/>
+                <TextBlock Text="{Binding PageTitle}"
+               FontSize="30"
+               FontWeight="Bold"
+               Foreground="#1E293B"/>
 
-                    <TextBlock Text="Система управления проектами и задачами"
-                               FontSize="16"
-                               Foreground="#64748B"
-                               Margin="0,15,0,0"/>
+                <StackPanel Orientation="Horizontal"
+                Margin="0,15,0,0">
+
+                    <Button Content="Проверить MongoDB"
+                Command="{Binding CheckDatabaseCommand}"
+                Width="170"
+                Height="35"/>
+
+                    <TextBlock Text="{Binding DatabaseStatus}"
+                   VerticalAlignment="Center"
+                   Margin="15,0,0,0"
+                   Foreground="#475569"/>
+
                 </StackPanel>
 
-            </Border>
+            </StackPanel>
+
+
+            <ContentControl Grid.Row="1"
+                Content="{Binding CurrentPage}"/>
         </Grid>
     </Grid>
 </Window>
