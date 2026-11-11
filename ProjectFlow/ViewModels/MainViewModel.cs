@@ -42,8 +42,7 @@ public partial class MainViewModel : ObservableObject
             "Задачи" => new PlaceholderViewModel(
                 "Раздел управления задачами"),
 
-            "Сотрудники" => new PlaceholderViewModel(
-                "Раздел управления сотрудниками"),
+            "Сотрудники" => new EmployeesViewModel(),
 
             "Статистика" => new PlaceholderViewModel(
                 "Раздел статистики"),
