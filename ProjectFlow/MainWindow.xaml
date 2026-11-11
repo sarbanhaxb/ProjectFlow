@@ -1,0 +1,96 @@
+﻿<Window x:Class="ProjectFlow.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ProjectFlow — Управление проектами"
+        Height="700"
+        Width="1100"
+        MinHeight="600"
+        MinWidth="900"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F7FB">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Боковое меню -->
+        <Border Grid.Column="0"
+                Background="#1E293B">
+
+            <StackPanel Margin="20">
+
+                <TextBlock Text="ProjectFlow"
+                           FontSize="26"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Margin="0,20,0,40"/>
+
+                <Button Content="Главная"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="Главная"
+                        Height="45"
+                        Margin="0,0,0,10"/>
+
+                <Button Content="Проекты"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="Проекты"
+                        Height="45"
+                        Margin="0,0,0,10"/>
+
+                <Button Content="Задачи"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="Задачи"
+                        Height="45"
+                        Margin="0,0,0,10"/>
+
+                <Button Content="Сотрудники"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="Сотрудники"
+                        Height="45"
+                        Margin="0,0,0,10"/>
+
+                <Button Content="Статистика"
+                        Command="{Binding NavigateCommand}"
+                        CommandParameter="Статистика"
+                        Height="45"/>
+
+            </StackPanel>
+        </Border>
+
+        <!-- Основная рабочая область -->
+        <Grid Grid.Column="1" Margin="30">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="{Binding PageTitle}"
+                       FontSize="30"
+                       FontWeight="Bold"
+                       Foreground="#1E293B"
+                       Margin="0,0,0,25"/>
+
+            <Border Grid.Row="1"
+                    Background="White"
+                    CornerRadius="12"
+                    Padding="25">
+
+                <StackPanel>
+                    <TextBlock Text="Добро пожаловать в ProjectFlow!"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               Foreground="#1E293B"/>
+
+                    <TextBlock Text="Система управления проектами и задачами"
+                               FontSize="16"
+                               Foreground="#64748B"
+                               Margin="0,15,0,0"/>
+                </StackPanel>
+
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
