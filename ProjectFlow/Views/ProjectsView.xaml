@@ -8,33 +8,43 @@
 
         <DockPanel>
 
-            <!-- Панель управления -->
             <StackPanel DockPanel.Dock="Top"
                         Orientation="Horizontal"
                         Margin="0,0,0,20">
 
-                <Button Content="Загрузить проекты"
+                <Button Content="Обновить"
                         Command="{Binding LoadProjectsCommand}"
-                        Width="160"
+                        Width="110"
                         Height="40"
                         Margin="0,0,10,0"/>
 
-                <Button Content="+ Добавить тестовый проект"
-                        Command="{Binding AddTestProjectCommand}"
-                        Width="220"
+                <Button Content="+ Создать"
+                        Command="{Binding CreateProjectCommand}"
+                        Width="120"
+                        Height="40"
+                        Margin="0,0,10,0"/>
+
+                <Button Content="Редактировать"
+                        Command="{Binding EditProjectCommand}"
+                        Width="130"
+                        Height="40"
+                        Margin="0,0,10,0"/>
+
+                <Button Content="Удалить"
+                        Command="{Binding DeleteProjectCommand}"
+                        Width="110"
                         Height="40"/>
 
             </StackPanel>
 
-            <!-- Строка состояния -->
             <TextBlock DockPanel.Dock="Bottom"
                        Text="{Binding StatusMessage}"
                        FontSize="13"
                        Foreground="#64748B"
                        Margin="0,15,0,0"/>
 
-            <!-- Таблица проектов -->
             <DataGrid ItemsSource="{Binding Projects}"
+                      SelectedItem="{Binding SelectedProject, Mode=TwoWay}"
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       CanUserAddRows="False"
@@ -56,19 +66,17 @@
                                         Binding="{Binding Status}"
                                         Width="120"/>
 
-                    <DataGridTextColumn Header="Дата начала"
+                    <DataGridTextColumn Header="Начало"
                                         Binding="{Binding StartDate, StringFormat=dd.MM.yyyy}"
-                                        Width="120"/>
+                                        Width="110"/>
 
-                    <DataGridTextColumn Header="Дата окончания"
+                    <DataGridTextColumn Header="Окончание"
                                         Binding="{Binding EndDate, StringFormat=dd.MM.yyyy}"
-                                        Width="130"/>
+                                        Width="120"/>
 
                 </DataGrid.Columns>
 
             </DataGrid>
-
         </DockPanel>
-
     </Border>
 </UserControl>

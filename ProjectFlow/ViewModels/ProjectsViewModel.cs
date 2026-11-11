@@ -1,9 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿
+using System.Collections.ObjectModel;
+using System.Windows;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ProjectFlow.Models;
 using ProjectFlow.Services;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+using ProjectFlow.Views;
 
 namespace ProjectFlow.ViewModels;
 
@@ -12,6 +14,9 @@ public partial class ProjectsViewModel : ObservableObject
     private readonly ProjectService _projectService;
 
     public ObservableCollection<Project> Projects { get; } = new();
+
+    [ObservableProperty]
+    private Project? selectedProject;
 
     [ObservableProperty]
     private string statusMessage = string.Empty;
@@ -44,7 +49,7 @@ public partial class ProjectsViewModel : ObservableObject
 
             StatusMessage = $"Загружено проектов: {Projects.Count}";
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             StatusMessage = $"Ошибка загрузки: {ex.Message}";
         }
@@ -55,34 +60,97 @@ public partial class ProjectsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task AddTestProjectAsync()
+    private async Task CreateProjectAsync()
     {
-        if (IsBusy)
-            return;
+        var window = new ProjectEditorWindow
+        {
+            Owner = Application.Current.MainWindow
+        };
 
-        IsBusy = true;
+        if (window.ShowDialog() != true)
+            return;
 
         try
         {
-            var project = new Project
-            {
-                Name = "Разработка информационной системы",
-                Description = "Тестовый проект ProjectFlow",
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddMonths(2),
-                Status = Models.Enums.ProjectStatus.InProgress
-            };
+            await _projectService.CreateAsync(window.Project);
+            await LoadProjectsAsync();
 
-            await _projectService.CreateAsync(project);
-
-            Projects.Add(project);
-
-            StatusMessage = "Проект успешно добавлен";
+            StatusMessage = "Проект успешно создан.";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Ощибка создания: {ex.Message}";
+            StatusMessage = $"Ошибка создания: {ex.Message}";
         }
-        finally { IsBusy = false; }
+    }
+
+    [RelayCommand]
+    private async Task EditProjectAsync()
+    {
+        if (SelectedProject == null)
+            return;
+
+        var window = new ProjectEditorWindow(SelectedProject)
+        {
+            Owner = Application.Current.MainWindow
+        };
+
+        if (window.ShowDialog() != true)
+            return;
+
+        try
+        {
+            bool updated =
+                await _projectService.UpdateAsync(window.Project);
+
+            if (updated)
+            {
+                await LoadProjectsAsync();
+                StatusMessage = "Проект успешно обновлён.";
+            }
+            else
+            {
+                StatusMessage = "Проект не найден.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Ошибка обновления: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task DeleteProjectAsync()
+    {
+        if (SelectedProject?.Id == null)
+            return;
+
+        var result = MessageBox.Show(
+            $"Удалить проект «{SelectedProject.Name}»?",
+            "Подтверждение удаления",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result != MessageBoxResult.Yes)
+            return;
+
+        try
+        {
+            bool deleted =
+                await _projectService.DeleteAsync(SelectedProject.Id);
+
+            if (deleted)
+            {
+                await LoadProjectsAsync();
+                StatusMessage = "Проект удалён.";
+            }
+            else
+            {
+                StatusMessage = "Проект не найден.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Ошибка удаления: {ex.Message}";
+        }
     }
 }
