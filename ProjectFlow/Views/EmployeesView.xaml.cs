@@ -1,26 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using ProjectFlow.ViewModels;
 
-namespace ProjectFlow.Views
+namespace ProjectFlow.Views;
+
+public partial class EmployeesView : UserControl
 {
-    /// <summary>
-    /// Логика взаимодействия для EmployeesView.xaml
-    /// </summary>
-    public partial class EmployeesView : UserControl
+    public EmployeesView()
     {
-        public EmployeesView()
+        InitializeComponent();
+
+        Loaded += EmployeesView_Loaded;
+    }
+
+    private async void EmployeesView_Loaded(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is EmployeesViewModel viewModel)
         {
-            InitializeComponent();
+            await viewModel.LoadEmployeesCommand
+                .ExecuteAsync(null);
         }
     }
 }

@@ -1,26 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using ProjectFlow.ViewModels;
 
-namespace ProjectFlow.Views
+namespace ProjectFlow.Views;
+
+public partial class DashboardView : UserControl
 {
-    /// <summary>
-    /// Логика взаимодействия для DashboardView.xaml
-    /// </summary>
-    public partial class DashboardView : UserControl
+    public DashboardView()
     {
-        public DashboardView()
+        InitializeComponent();
+        Loaded += DashboardView_Loaded;
+    }
+
+    private async void DashboardView_Loaded(
+        object sender,
+        RoutedEventArgs e)
+    {
+        if (DataContext is DashboardViewModel viewModel)
         {
-            InitializeComponent();
+            await viewModel.LoadDashboardCommand
+                .ExecuteAsync(null);
         }
     }
 }

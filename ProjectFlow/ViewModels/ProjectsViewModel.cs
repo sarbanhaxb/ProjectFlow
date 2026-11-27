@@ -12,11 +12,12 @@ namespace ProjectFlow.ViewModels;
 public partial class ProjectsViewModel : ObservableObject
 {
     private readonly ProjectService _projectService;
-
-    public ObservableCollection<Project> Projects { get; } = new();
+    private readonly EmployeeService _employeeService;
+    private readonly TaskService _taskService;
+    public ObservableCollection<ProjectListItem> Projects { get; } = new();
 
     [ObservableProperty]
-    private Project? selectedProject;
+    private ProjectListItem? selectedProject;
 
     [ObservableProperty]
     private string statusMessage = string.Empty;
@@ -26,9 +27,13 @@ public partial class ProjectsViewModel : ObservableObject
 
     public ProjectsViewModel()
     {
-        var mongoDbService = new MongoDbService();
+        var mongoDbService = MongoDbService.Instance;
+
         _projectService = new ProjectService(mongoDbService);
+        _employeeService = new EmployeeService(mongoDbService);
+        _taskService = new TaskService(mongoDbService);
     }
+
 
     [RelayCommand]
     private async Task LoadProjectsAsync()
@@ -40,14 +45,7 @@ public partial class ProjectsViewModel : ObservableObject
 
         try
         {
-            var projects = await _projectService.GetAllAsync();
-
-            Projects.Clear();
-
-            foreach (var project in projects)
-                Projects.Add(project);
-
-            StatusMessage = $"Загружено проектов: {Projects.Count}";
+            await ReloadProjectsAsync();
         }
         catch (Exception ex)
         {
@@ -59,9 +57,47 @@ public partial class ProjectsViewModel : ObservableObject
         }
     }
 
+    private async Task ReloadProjectsAsync()
+    {
+        var projects = await _projectService.GetAllAsync();
+        var employees = await _employeeService.GetAllAsync();
+
+        var employeeDictionary = employees
+            .Where(e => e.Id != null)
+            .ToDictionary(e => e.Id!, e => e.FullName);
+
+        var items = new List<ProjectListItem>();
+
+        foreach (var project in projects)
+        {
+            var memberNames = project.MemberIds
+                .Where(id => employeeDictionary.ContainsKey(id))
+                .Select(id => employeeDictionary[id]);
+
+            items.Add(new ProjectListItem
+            {
+                Project = project,
+                Members = string.Join(", ", memberNames)
+            });
+        }
+
+        Projects.Clear();
+
+        foreach (var item in items)
+            Projects.Add(item);
+
+        StatusMessage = $"Загружено проектов: {Projects.Count}";
+    }
+
+
+
+
     [RelayCommand]
     private async Task CreateProjectAsync()
     {
+        if (IsBusy)
+            return;
+
         var window = new ProjectEditorWindow
         {
             Owner = Application.Current.MainWindow
@@ -70,26 +106,40 @@ public partial class ProjectsViewModel : ObservableObject
         if (window.ShowDialog() != true)
             return;
 
+        if (IsBusy)
+            return;
+
+        IsBusy = true;
+
         try
         {
             await _projectService.CreateAsync(window.Project);
-            await LoadProjectsAsync();
+
+            await ReloadProjectsAsync();
 
             StatusMessage = "Проект успешно создан.";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Ошибка создания: {ex.Message}";
+            StatusMessage =
+                $"Ошибка создания или обновления списка: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
+
 
     [RelayCommand]
     private async Task EditProjectAsync()
     {
-        if (SelectedProject == null)
+        if (IsBusy || SelectedProject == null)
             return;
 
-        var window = new ProjectEditorWindow(SelectedProject)
+        var selectedProject = SelectedProject.Project;
+
+        var window = new ProjectEditorWindow(selectedProject)
         {
             Owner = Application.Current.MainWindow
         };
@@ -97,60 +147,118 @@ public partial class ProjectsViewModel : ObservableObject
         if (window.ShowDialog() != true)
             return;
 
+        if (IsBusy)
+            return;
+
+        IsBusy = true;
+
         try
         {
-            bool updated =
-                await _projectService.UpdateAsync(window.Project);
+            var projectTasks = await _taskService.GetByProjectAsync(
+                window.Project.Id!);
 
-            if (updated)
+            var invalidTasks = projectTasks
+                .Where(t =>
+                    !string.IsNullOrEmpty(t.AssigneeId) &&
+                    !window.Project.MemberIds.Contains(t.AssigneeId))
+                .ToList();
+
+            if (invalidTasks.Count > 0)
             {
-                await LoadProjectsAsync();
-                StatusMessage = "Проект успешно обновлён.";
+                MessageBox.Show(
+                    "Невозможно сохранить проект.\n\n" +
+                    "Исключённые сотрудники являются " +
+                    "исполнителями задач.\n" +
+                    "Сначала переназначьте эти задачи.",
+                    "Проверка участников проекта",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+
+                return;
             }
-            else
+
+            bool updated = await _projectService.UpdateAsync(
+                window.Project);
+
+            if (!updated)
             {
                 StatusMessage = "Проект не найден.";
+                return;
             }
+
+            await ReloadProjectsAsync();
+
+            StatusMessage = "Проект успешно обновлён.";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Ошибка обновления: {ex.Message}";
+            StatusMessage =
+                $"Ошибка редактирования или обновления списка: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
+
+
 
     [RelayCommand]
     private async Task DeleteProjectAsync()
     {
-        if (SelectedProject?.Id == null)
+        if (IsBusy || SelectedProject?.Id is not string projectId)
             return;
 
-        var result = MessageBox.Show(
-            $"Удалить проект «{SelectedProject.Name}»?",
+        string projectName = SelectedProject.Name;
+
+        var confirmation = MessageBox.Show(
+            $"Удалить проект «{projectName}»?",
             "Подтверждение удаления",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
-        if (result != MessageBoxResult.Yes)
+        if (confirmation != MessageBoxResult.Yes)
             return;
+
+        if (IsBusy)
+            return;
+
+        IsBusy = true;
 
         try
         {
-            bool deleted =
-                await _projectService.DeleteAsync(SelectedProject.Id);
+            bool hasTasks =
+                await _taskService.HasTasksForProjectAsync(projectId);
 
-            if (deleted)
+            if (hasTasks)
             {
-                await LoadProjectsAsync();
-                StatusMessage = "Проект удалён.";
+                StatusMessage =
+                    "Нельзя удалить проект, пока в нём есть задачи.";
+                return;
             }
-            else
+
+            bool deleted = await _projectService.DeleteAsync(projectId);
+
+            if (!deleted)
             {
                 StatusMessage = "Проект не найден.";
+                return;
             }
+
+            await ReloadProjectsAsync();
+
+            StatusMessage = "Проект удалён.";
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Ошибка удаления: {ex.Message}";
+            StatusMessage =
+                $"Ошибка удаления или обновления списка: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
+
+
 }

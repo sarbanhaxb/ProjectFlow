@@ -6,16 +6,26 @@ namespace ProjectFlow.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    private readonly MongoDbService _mongoDbService = new();
+    private readonly MongoDbService _mongoDbService =
+        MongoDbService.Instance;
 
     [ObservableProperty]
     private string pageTitle = "Главная панель";
 
     [ObservableProperty]
-    private ObservableObject currentPage = new DashboardViewModel();
+    private ObservableObject? currentPage;
+
+    [ObservableProperty]
+    private bool isDatabaseReady;
+    [ObservableProperty]
+    private bool isConnecting;
 
     [ObservableProperty]
     private string databaseStatus = "Подключение не проверено";
+
+    [ObservableProperty]
+    private string selectedPage = "Главная";
+
 
 
     [RelayCommand]
@@ -31,6 +41,10 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Navigate(string page)
     {
+        if (!IsDatabaseReady)
+            return;
+
+        SelectedPage = page;
         PageTitle = page;
 
         CurrentPage = page switch
@@ -39,13 +53,11 @@ public partial class MainViewModel : ObservableObject
 
             "Проекты" => new ProjectsViewModel(),
 
-            "Задачи" => new PlaceholderViewModel(
-                "Раздел управления задачами"),
+            "Задачи" => new TasksViewModel(),
 
             "Сотрудники" => new EmployeesViewModel(),
 
-            "Статистика" => new PlaceholderViewModel(
-                "Раздел статистики"),
+            "Статистика" => new StatisticsViewModel(),
 
             _ => new DashboardViewModel()
         };

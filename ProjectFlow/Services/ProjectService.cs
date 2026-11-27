@@ -49,6 +49,16 @@ namespace ProjectFlow.Services
 
             return result.DeletedCount > 0;
         }
-        
+
+
+        public async Task<bool> IsEmployeeAssignedAsync(
+            string employeeId)
+        {
+            return await _projects
+                .Find(p => p.MemberIds.Contains(employeeId))
+                .AnyAsync();
+        }
+
+
     }
 }

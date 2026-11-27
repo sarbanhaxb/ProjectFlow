@@ -2,12 +2,16 @@
 using System.Windows;
 using ProjectFlow.Models;
 using ProjectFlow.Models.Enums;
+using ProjectFlow.Services;
+using ProjectFlow.Helpers;
 
 namespace ProjectFlow.Views;
 
 public partial class ProjectEditorWindow : Window
 {
     public Project Project { get; }
+
+    private readonly EmployeeService _employeeService;
 
     public ProjectEditorWindow(Project? project = null)
     {
@@ -38,10 +42,14 @@ public partial class ProjectEditorWindow : Window
         StatusComboBox.SelectedItem = Project.Status;
 
         StartDatePicker.SelectedDate =
-            Project.StartDate.ToLocalTime().Date;
+            Project.StartDate.Date;
 
         EndDatePicker.SelectedDate =
-            Project.EndDate?.ToLocalTime().Date;
+            Project.EndDate?.Date;
+
+        _employeeService = new EmployeeService(MongoDbService.Instance);
+
+        Loaded += ProjectEditorWindow_Loaded;
     }
 
     private void SaveButton_Click(
@@ -85,13 +93,61 @@ public partial class ProjectEditorWindow : Window
         Project.Status = (ProjectStatus)
             StatusComboBox.SelectedItem;
 
-        Project.StartDate =
-            StartDatePicker.SelectedDate.Value
-                .Date.ToUniversalTime();
+        Project.StartDate = DateHelper.ToUtcDate(
+            StartDatePicker.SelectedDate!.Value);
 
-        Project.EndDate =
-            endDate?.Date.ToUniversalTime();
+        Project.EndDate = DateHelper.ToUtcDate(
+            EndDatePicker.SelectedDate);
+
+
+        Project.MemberIds = MembersListBox.SelectedItems
+            .Cast<Employee>()
+            .Where(employee => employee.Id != null)
+            .Select(employee => employee.Id!)
+            .ToList();
+
 
         DialogResult = true;
     }
+
+
+    private async void ProjectEditorWindow_Loaded(
+        object sender,
+        RoutedEventArgs e)
+    {
+        // Не запускаем загрузку повторно
+        Loaded -= ProjectEditorWindow_Loaded;
+
+        SaveButton.IsEnabled = false;
+
+        try
+        {
+            var employees = await _employeeService.GetAllAsync();
+
+            MembersListBox.ItemsSource = employees;
+
+            foreach (var employee in employees)
+            {
+                if (employee.Id != null &&
+                    Project.MemberIds.Contains(employee.Id))
+                {
+                    MembersListBox.SelectedItems.Add(employee);
+                }
+            }
+
+            SaveButton.IsEnabled = true;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Не удалось загрузить сотрудников:\n{ex.Message}",
+                "Ошибка MongoDB",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            // Сохранение остаётся заблокированным
+        }
+    }
+
+
 }

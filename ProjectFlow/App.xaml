@@ -4,6 +4,17 @@
              xmlns:local="clr-namespace:ProjectFlow"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Styles/Colors.xaml"/>
+                <ResourceDictionary Source="/Styles/ButtonStyles.xaml"/>
+                <ResourceDictionary Source="/Styles/InputStyles.xaml"/>
+                <ResourceDictionary Source="/Styles/CardStyles.xaml"/>
+                <ResourceDictionary Source="Styles/DataGridStyles.xaml"/>
+                <ResourceDictionary Source="Styles/StatusStyles.xaml"/>
+                <ResourceDictionary Source="Styles/EditorStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
          
     </Application.Resources>
 </Application>

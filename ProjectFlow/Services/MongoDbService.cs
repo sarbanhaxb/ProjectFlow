@@ -1,38 +1,42 @@
-﻿using MongoDB.Bson;
+﻿
+using MongoDB.Bson;
 using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace ProjectFlow.Services
+namespace ProjectFlow.Services;
+
+public sealed class MongoDbService
 {
-    public class MongoDbService
+    // Единый экземпляр сервиса для приложения
+    public static MongoDbService Instance { get; } = new();
+
+    private readonly IMongoClient _client;
+    private readonly IMongoDatabase _database;
+
+    // Запрещаем создание экземпляров извне
+    private MongoDbService()
     {
-        private readonly IMongoDatabase _database;
+        _client = new MongoClient(
+            "mongodb://localhost:27017");
 
-        public MongoDbService()
+        _database = _client.GetDatabase("ProjectFlowDB");
+    }
+
+    public IMongoDatabase Database => _database;
+
+    public async Task<bool> CheckConnectionAsync()
+    {
+        try
         {
-            var client = new MongoClient("mongodb://localhost:27017");
+            var command = new BsonDocument("ping", 1);
 
-            _database = client.GetDatabase("ProjectFlowDB");
+            await _database.RunCommandAsync<BsonDocument>(
+                command);
+
+            return true;
         }
-
-        public IMongoDatabase Database => _database;
-
-        public async Task<bool> CheckConnectionAsync()
+        catch (MongoException)
         {
-            try
-            {
-                var command = new BsonDocument("ping", 1);
-
-                await _database.RunCommandAsync<BsonDocument>(command);
-
-                return true;
-            }
-            catch (MongoException)
-            {
-                return false;
-            }
+            return false;
         }
     }
 }

@@ -3,16 +3,22 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:ProjectFlow.ViewModels"
         xmlns:views="clr-namespace:ProjectFlow.Views"
+        xmlns:helpers="clr-namespace:ProjectFlow.Helpers"
         Title="ProjectFlow — Управление проектами"
-        Height="700"
-        Width="1100"
-        MinHeight="600"
-        MinWidth="900"
+        Width="1280"
+        Height="800"
+        MinWidth="1050"
+        MinHeight="650"
         WindowStartupLocation="CenterScreen"
-        Background="#F5F7FB">
+        Background="{StaticResource BackgroundBrush}"
+        FontFamily="Segoe UI">
 
     <Window.Resources>
 
+        <helpers:SelectedPageConverter
+            x:Key="SelectedPageConverter"/>
+
+        <!-- Представления -->
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
             <views:DashboardView/>
         </DataTemplate>
@@ -21,101 +27,284 @@
             <views:ProjectsView/>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
-            <views:PlaceholderView/>
-        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:EmployeesViewModel}">
             <views:EmployeesView/>
         </DataTemplate>
 
+        <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
+            <views:PlaceholderView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:TasksViewModel}">
+            <views:TasksView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StatisticsViewModel}">
+            <views:StatisticsView/>
+        </DataTemplate>
+
+        <!-- Стиль навигации -->
+        <Style x:Key="NavToggleStyle"
+               TargetType="ToggleButton">
+
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="48"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="Padding" Value="18,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+
+                        <Border x:Name="NavBorder"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="9"
+                                Padding="{TemplateBinding Padding}">
+
+                            <ContentPresenter
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Left"/>
+
+                        </Border>
+
+                        <ControlTemplate.Triggers>
+
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter TargetName="NavBorder"
+                                        Property="Background"
+                                        Value="#1E293B"/>
+                            </Trigger>
+
+                            <Trigger Property="IsChecked"
+                                     Value="True">
+                                <Setter TargetName="NavBorder"
+                                        Property="Background"
+                                        Value="{StaticResource PrimaryBrush}"/>
+                                <Setter Property="Foreground"
+                                        Value="White"/>
+                                <Setter Property="FontWeight"
+                                        Value="SemiBold"/>
+                            </Trigger>
+
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsDatabaseReady}"
+                 Value="False">
+                    <Setter Property="IsEnabled" Value="False"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
     </Window.Resources>
-    
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="230"/>
+            <ColumnDefinition Width="250"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Боковое меню -->
+        <!-- Боковая панель -->
         <Border Grid.Column="0"
-                Background="#1E293B">
+                Background="{StaticResource SidebarBrush}">
 
-            <StackPanel Margin="20">
+            <DockPanel Margin="14,24">
 
-                <TextBlock Text="ProjectFlow"
-                           FontSize="26"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           Margin="0,20,0,40"/>
+                <StackPanel DockPanel.Dock="Top">
 
-                <Button Content="Главная"
+                    <!-- Логотип -->
+                    <StackPanel Orientation="Horizontal"
+                                Margin="12,8,0,35">
+
+                        <Border Width="42"
+                                Height="42"
+                                CornerRadius="10"
+                                Background="{StaticResource PrimaryBrush}">
+
+                            <TextBlock Text="PF"
+                                       Foreground="White"
+                                       FontWeight="Bold"
+                                       FontSize="16"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+
+                        </Border>
+
+                        <TextBlock Text="ProjectFlow"
+                                   Foreground="White"
+                                   FontSize="23"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center"
+                                   Margin="12,0,0,0"/>
+
+                    </StackPanel>
+
+                    <!-- Главная -->
+                    <ToggleButton Content="⌂   Главная"
+                        Style="{StaticResource NavToggleStyle}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="Главная"
-                        Height="45"
-                        Margin="0,0,0,10"/>
+                        IsChecked="{Binding SelectedPage,
+                            Converter={StaticResource SelectedPageConverter},
+                            ConverterParameter=Главная,
+                            Mode=OneWay}"/>
 
-                <Button Content="Проекты"
+                    <!-- Проекты -->
+                    <ToggleButton Content="▣   Проекты"
+                        Style="{StaticResource NavToggleStyle}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="Проекты"
-                        Height="45"
-                        Margin="0,0,0,10"/>
+                        IsChecked="{Binding SelectedPage,
+                            Converter={StaticResource SelectedPageConverter},
+                            ConverterParameter=Проекты,
+                            Mode=OneWay}"/>
 
-                <Button Content="Задачи"
+                    <!-- Задачи -->
+                    <ToggleButton Content="☑   Задачи"
+                        Style="{StaticResource NavToggleStyle}"
                         Command="{Binding NavigateCommand}"
-                        CommandParameter="Задачи"                       
-                        Height="45"
-                        Margin="0,0,0,10"/>
+                        CommandParameter="Задачи"
+                        IsChecked="{Binding SelectedPage,
+                            Converter={StaticResource SelectedPageConverter},
+                            ConverterParameter=Задачи,
+                            Mode=OneWay}"/>
 
-                <Button Content="Сотрудники"
+                    <!-- Сотрудники -->
+                    <ToggleButton Content="♙   Сотрудники"
+                        Style="{StaticResource NavToggleStyle}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="Сотрудники"
-                        Height="45"
-                        Margin="0,0,0,10"/>
+                        IsChecked="{Binding SelectedPage,
+                            Converter={StaticResource SelectedPageConverter},
+                            ConverterParameter=Сотрудники,
+                            Mode=OneWay}"/>
 
-                <Button Content="Статистика"
+                    <!-- Статистика -->
+                    <ToggleButton Content="▥   Статистика"
+                        Style="{StaticResource NavToggleStyle}"
                         Command="{Binding NavigateCommand}"
                         CommandParameter="Статистика"
-                        Height="45"/>
-
-            </StackPanel>
-        </Border>
-
-        <!-- Основная рабочая область -->
-        <Grid Grid.Column="1" Margin="30">
-
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-
-            <StackPanel Grid.Row="0" Margin="0,0,0,25">
-
-                <TextBlock Text="{Binding PageTitle}"
-               FontSize="30"
-               FontWeight="Bold"
-               Foreground="#1E293B"/>
-
-                <StackPanel Orientation="Horizontal"
-                Margin="0,15,0,0">
-
-                    <Button Content="Проверить MongoDB"
-                Command="{Binding CheckDatabaseCommand}"
-                Width="170"
-                Height="35"/>
-
-                    <TextBlock Text="{Binding DatabaseStatus}"
-                   VerticalAlignment="Center"
-                   Margin="15,0,0,0"
-                   Foreground="#475569"/>
+                        IsChecked="{Binding SelectedPage,
+                            Converter={StaticResource SelectedPageConverter},
+                            ConverterParameter=Статистика,
+                            Mode=OneWay}"/>
 
                 </StackPanel>
 
-            </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Основная область -->
+        <Grid Grid.Column="1">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="70"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Верхняя панель -->
+            <Border Grid.Row="0"
+                    Background="White"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="0,0,0,1">
+
+                <Grid Margin="30,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Center">
+
+                        <TextBlock Text="ProjectFlow"
+                                   Foreground="{StaticResource PrimaryBrush}"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBlock Text="  ›  "
+                                   Foreground="#94A3B8"
+                                   FontSize="18"/>
+
+                        <TextBlock Text="{Binding SelectedPage}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontSize="15"/>
+
+                    </StackPanel>
 
 
-            <ContentControl Grid.Row="1"
-                Content="{Binding CurrentPage}"/>
+                    <StackPanel Grid.Column="1"
+            Orientation="Horizontal"
+            VerticalAlignment="Center">
+
+                        <TextBlock
+        Text="{Binding DatabaseStatus}"
+        Foreground="{StaticResource TextSecondaryBrush}"
+        FontSize="12"
+        VerticalAlignment="Center"
+        Margin="0,0,12,0"/>
+
+
+                        <Button Content="Повторить подключение"
+        Click="RetryConnection_Click">
+
+                            <Button.Style>
+                                <Style TargetType="Button"
+               BasedOn="{StaticResource SecondaryButtonStyle}">
+
+                                    <Style.Triggers>
+
+                                        <!-- Подключение уже выполняется -->
+                                        <DataTrigger Binding="{Binding IsConnecting}"
+                             Value="True">
+                                            <Setter Property="IsEnabled"
+                            Value="False"/>
+                                        </DataTrigger>
+
+                                        <!-- MongoDB уже подключена -->
+                                        <DataTrigger Binding="{Binding IsDatabaseReady}"
+                             Value="True">
+                                            <Setter Property="IsEnabled"
+                            Value="False"/>
+                                        </DataTrigger>
+
+                                    </Style.Triggers>
+
+                                </Style>
+                            </Button.Style>
+
+                        </Button>
+
+
+                    </StackPanel>
+
+
+                </Grid>
+            </Border>
+
+            <!-- Контент -->
+            <Grid Grid.Row="1" Margin="30,28,30,30">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="{Binding PageTitle}"
+                           FontSize="30"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource TextPrimaryBrush}"
+                           Margin="0,0,0,25"/>
+
+                <ContentControl Grid.Row="1"
+                                Content="{Binding CurrentPage}"/>
+
+            </Grid>
         </Grid>
     </Grid>
 </Window>

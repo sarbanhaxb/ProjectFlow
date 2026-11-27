@@ -1,72 +1,156 @@
 ﻿<UserControl x:Class="ProjectFlow.Views.EmployeesView"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
 
-    <Border Background="White"
-            CornerRadius="12"
-            Padding="25">
+    <Border Style="{StaticResource CardStyle}">
 
-        <DockPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-            <StackPanel DockPanel.Dock="Top"
-                        Orientation="Horizontal"
-                        Margin="0,0,0,20">
+            <!-- Заголовок раздела -->
+            <Grid Grid.Row="0"
+                  Margin="0,0,0,24">
 
-                <Button Content="Обновить"
-                        Command="{Binding LoadEmployeesCommand}"
-                        Width="110"
-                        Height="40"
-                        Margin="0,0,10,0"/>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-                <Button Content="+ Добавить"
+                <StackPanel>
+
+                    <TextBlock Text="Команда проекта"
+                               FontSize="21"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                    <TextBlock
+                        Text="Управление сотрудниками и участниками проектов"
+                        FontSize="13"
+                        Foreground="{StaticResource TextSecondaryBrush}"
+                        Margin="0,7,0,0"/>
+
+                </StackPanel>
+
+                <Button Grid.Column="1"
+                        Content="+ Добавить сотрудника"
                         Command="{Binding CreateEmployeeCommand}"
-                        Width="120"
-                        Height="40"
+                        Style="{StaticResource BusyAwarePrimaryButtonStyle}"
+                        MinWidth="185"
+                        VerticalAlignment="Center"/>
+
+            </Grid>
+
+            <!-- Панель управления -->
+            <Grid Grid.Row="1"
+                  Margin="0,0,0,18">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        Content="Обновить"
+                        Command="{Binding LoadEmployeesCommand}"
+                        Style="{StaticResource BusyAwareSecondaryButtonStyle}"
                         Margin="0,0,10,0"/>
 
-                <Button Content="Редактировать"
+                <Button Grid.Column="1"
+                        Content="Редактировать"
                         Command="{Binding EditEmployeeCommand}"
-                        Width="130"
-                        Height="40"
+                        Style="{StaticResource BusyAwareSecondaryButtonStyle}"
                         Margin="0,0,10,0"/>
 
-                <Button Content="Удалить"
+                <Button Grid.Column="2"
+                        Content="Удалить"
                         Command="{Binding DeleteEmployeeCommand}"
-                        Width="110"
-                        Height="40"/>
+                        Style="{StaticResource BusyAwareSecondaryButtonStyle}"/>
 
-            </StackPanel>
+                <StackPanel Grid.Column="4"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
 
-            <TextBlock DockPanel.Dock="Bottom"
-                       Text="{Binding StatusMessage}"
-                       Foreground="#64748B"
-                       Margin="0,15,0,0"/>
+                    <TextBlock Text="Всего сотрудников:"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="13"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
 
-            <DataGrid ItemsSource="{Binding Employees}"
+                    <TextBlock Text="{Binding TotalEmployees}"
+                               Foreground="{StaticResource PrimaryBrush}"
+                               FontSize="15"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"/>
+
+                </StackPanel>
+
+            </Grid>
+
+            <!-- Таблица сотрудников -->
+            <DataGrid Grid.Row="2"
+                      ItemsSource="{Binding Employees}"
                       SelectedItem="{Binding SelectedEmployee, Mode=TwoWay}"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      CanUserAddRows="False"
-                      SelectionMode="Single">
+                      Style="{StaticResource ModernDataGridStyle}"
+                      MinHeight="250">
 
                 <DataGrid.Columns>
 
-                    <DataGridTextColumn Header="ФИО"
-                                        Binding="{Binding FullName}"
-                                        Width="2*"/>
+                    <DataGridTextColumn
+                        Header="ФИО сотрудника"
+                        Binding="{Binding FullName}"
+                        Width="2*"/>
 
-                    <DataGridTextColumn Header="Email"
-                                        Binding="{Binding Email}"
-                                        Width="2*"/>
+                    <DataGridTextColumn
+                        Header="Электронная почта"
+                        Binding="{Binding Email}"
+                        Width="2*"/>
 
-                    <DataGridTextColumn Header="Должность"
-                                        Binding="{Binding Position}"
-                                        Width="*"/>
+                    <DataGridTextColumn
+                        Header="Должность"
+                        Binding="{Binding Position}"
+                        Width="*"/>
 
                 </DataGrid.Columns>
 
             </DataGrid>
 
-        </DockPanel>
+            <!-- Строка состояния -->
+            <Border Grid.Row="3"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="0,1,0,0"
+                    Padding="0,15,0,0"
+                    Margin="0,16,0,0">
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="13"
+                               VerticalAlignment="Center"/>
+
+                    <TextBlock Grid.Column="1"
+                               Text="MongoDB • users"
+                               Foreground="#94A3B8"
+                               FontSize="12"
+                               VerticalAlignment="Center"/>
+
+                </Grid>
+
+            </Border>
+
+        </Grid>
     </Border>
 </UserControl>
